@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "534802650722",
+    "project_id": "destigo-caa22",
+    "storage_bucket": "destigo-caa22.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:534802650722:android:47936d267772e857b3e33b",
+        "android_client_info": {
+          "package_name": "com.example.desti_go"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCajwdp8Pn4WizNhbfj99HQi3lfra6G0uY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
