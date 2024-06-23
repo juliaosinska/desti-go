@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginScreen extends StatelessWidget {
-  final AuthController _authController = AuthController();
+  final AuthController authController;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  LoginScreen({required this.authController});
 
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -47,7 +49,7 @@ class LoginScreen extends StatelessWidget {
             children: <Widget>[
               Text(
                 'Welcome!',
-                style: TextStyle(fontSize: 70.0, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 40.0),
               TextField(
@@ -80,7 +82,7 @@ class LoginScreen extends StatelessWidget {
                   String email = _emailController.text.trim();
                   String password = _passwordController.text.trim();
                   try {
-                    UserModel? user = await _authController.signIn(email, password);
+                    UserModel? user = await authController.signIn(email, password);
                     if (user != null) {
                       Navigator.pushNamed(context, '/trips');
                     }

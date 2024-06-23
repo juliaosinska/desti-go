@@ -1,13 +1,23 @@
 import 'package:desti_go/controllers/authorization_controller.dart';
 import 'package:flutter/material.dart';
-
-import '../../models/user.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterScreen extends StatelessWidget {
-  final AuthController _authController = AuthController();
+  final AuthController authController;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  RegisterScreen({required this.authController});
+
+  void _showError(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,9 +48,9 @@ class RegisterScreen extends StatelessWidget {
             children: <Widget>[
               Text(
                 'Nice to meet you!',
-                style: TextStyle(fontSize: 50.0, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 45.0, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 40.0),
+                            SizedBox(height: 40.0),
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -70,9 +80,25 @@ class RegisterScreen extends StatelessWidget {
                 onPressed: () async {
                   String email = _emailController.text.trim();
                   String password = _passwordController.text.trim();
-                  UserModel? user = await _authController.register(email, password);
-                  if (user != null) {
+                  try {
+                    await authController.register(email, password);
                     Navigator.pushNamed(context, '/trips');
+                  } on FirebaseAuthException catch (e) {
+                    switch (e.code) {
+                      case 'email-already-in-use':
+                        _showError(context, 'The email address is already in use by another account.');
+                        break;
+                      case 'invalid-email':
+                        _showError(context, 'The email address is badly formatted.');
+                        break;
+                      case 'weak-password':
+                        _showError(context, 'The password is too weak.');
+                        break;
+                      default:
+                        _showError(context, 'An unknown error occurred.');
+                    }
+                  } catch (e) {
+                    _showError(context, 'An unknown error occurred.');
                   }
                 },
                 child: Text(

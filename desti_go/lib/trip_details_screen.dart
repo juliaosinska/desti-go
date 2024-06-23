@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:desti_go/models/trip.dart';
+import 'package:desti_go/controllers/trip_controller.dart';
+import 'package:provider/provider.dart';
 
 class TripDetailsScreen extends StatelessWidget {
+  final Trip trip;
+
+  TripDetailsScreen({required this.trip});
+
   @override
   Widget build(BuildContext context) {
+    final tripController = Provider.of<TripController>(context);
+
+    // Calculate days until the trip
+    final now = DateTime.now();
+    final daysUntilTrip = trip.departureDate.difference(now).inDays;
+
+    String formattedDepartureDate = DateFormat.yMd().format(trip.departureDate);
+    String formattedReturnDate = DateFormat.yMd().format(trip.returnDate);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -37,11 +54,11 @@ class TripDetailsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'CITY',
+                        trip.destination.toUpperCase(),
                         style: TextStyle(fontSize: 70, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'DATES',
+                        '$formattedDepartureDate - $formattedReturnDate',
                         style: TextStyle(fontSize: 40),
                       ),
                     ],
@@ -64,7 +81,10 @@ class TripDetailsScreen extends StatelessWidget {
                 ),
                 CircleAvatar(
                   radius: 50,
-                  child: Text('nr', style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    '$daysUntilTrip',
+                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                  ),
                   backgroundColor: Color.fromARGB(255, 97, 64, 187),
                   foregroundColor: Colors.white,
                 ),
@@ -151,9 +171,15 @@ class TripDetailsScreen extends StatelessWidget {
                         actions: <Widget>[
                           TextButton(
                             child: Text('Yes'),
-                            onPressed: () {
-                              // add delete action
-                              Navigator.of(context).pop();
+                            onPressed: () async {
+                              try {
+                                await tripController.deleteTrip(trip.id!, trip.userId);
+                                Navigator.of(context).pop();
+                                Navigator.of(context).pop(); // Pop twice to go back to previous screen
+                              } catch (e) {
+                                print('Error deleting trip: $e');
+                                // Handle error, e.g., show error message
+                              }
                             },
                           ),
                           TextButton(
