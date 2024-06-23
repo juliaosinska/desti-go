@@ -24,7 +24,7 @@ class LogoScreen extends StatelessWidget {
             ),
             SizedBox(height: 20),
             Image.asset(
-              '/assets/../logo.png',
+              'assets/logo.png',
               height: 400,
               fit: BoxFit.cover,
             ),
