@@ -1,8 +1,7 @@
+import 'package:desti_go/providers/trip_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:desti_go/controllers/trip_controller.dart';
-import 'package:desti_go/models/trip.dart';
 import 'package:desti_go/providers/authorization_provider.dart';
 
 class AddTripScreen extends StatefulWidget {
@@ -27,7 +26,6 @@ class _AddTripScreenState extends State<AddTripScreen> {
           style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Color.fromARGB(255, 97, 64, 187),
-        iconTheme: IconThemeData(color: Colors.black),
         elevation: 10.0,
         shadowColor: Colors.black.withOpacity(1),
         leading: IconButton(
@@ -36,6 +34,22 @@ class _AddTripScreenState extends State<AddTripScreen> {
             Navigator.pop(context);
           },
         ),
+        actions: <Widget>[
+          Padding(
+            padding: EdgeInsets.only(right: 20.0),
+            child: GestureDetector(
+              onTap: () async {
+                try {
+                  await authProvider.signOut();
+                  Navigator.pushNamed(context, '/');
+                } catch (e) {
+                  print('Error signing out: $e');
+                }
+              },
+              child: Icon(Icons.logout, color: Colors.white),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -108,9 +122,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('Select date', style: TextStyle(fontSize: 16)),
-                      SizedBox(height: 10.0),
-                      Text('Enter date of return', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text('Enter return date', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                       SizedBox(height: 10.0),
                       InkWell(
                         onTap: () async {
@@ -143,38 +155,36 @@ class _AddTripScreenState extends State<AddTripScreen> {
                 ),
               ),
               SizedBox(height: 30.0),
-              Center(
+              SizedBox(
+                width: double.infinity,
+                height: 50,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-                    backgroundColor: Color.fromARGB(255, 97, 64, 187),
-                    textStyle: TextStyle(fontSize: 20),
-                    foregroundColor: Colors.white
-                  ),
                   onPressed: () async {
-                    if (_destinationController.text.isEmpty ||
-                        _departureDate == null ||
-                        _returnDate == null) {
-                      // Show some error or warning
+                    final destination = _destinationController.text;
+                    final departureDate = _departureDate;
+                    final returnDate = _returnDate;
+
+                    if (destination.isEmpty || departureDate == null || returnDate == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Please fill all the fields')),
+                      );
                       return;
                     }
 
-                    try {
-                      await Provider.of<TripController>(context, listen: false)
-                          .addTrip(
-                        userId,
-                        _destinationController.text,
-                        _departureDate!,
-                        _returnDate!,
-                      );
-                      
-                      // Navigate back after adding the trip
-                      Navigator.pop(context);
-                    } catch (e) {
-                      print('Error adding trip: $e');
-                    }
+                    final tripProvider = Provider.of<TripProvider>(context, listen: false);
+                    await tripProvider.addTrip(userId, destination, departureDate, returnDate);
+                    Navigator.pop(context);
                   },
-                  child: Text('Add Trip')
+                  child: Text('Add trip', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Color.fromARGB(255, 97, 64, 187),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30.0),
+                    ),
+                    elevation: 5.0,
+                    shadowColor: Colors.black.withOpacity(1),
+                  ),
                 ),
               ),
             ],

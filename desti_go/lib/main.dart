@@ -1,34 +1,40 @@
 import 'package:desti_go/controllers/trip_controller.dart';
+import 'package:desti_go/repositories/trip_repository.dart';
+import 'package:desti_go/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:google_place/google_place.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:desti_go/firebase_options.dart';
 import 'package:desti_go/controllers/authorization_controller.dart' as myAuthController;
 import 'package:desti_go/providers/authorization_provider.dart';
-import 'package:desti_go/providers/trip_provider.dart'; // Import TripProvider
-import 'package:desti_go/views/authorization/login_screen.dart';
-import 'package:desti_go/views/authorization/register_screen.dart';
-import 'package:desti_go/logo_screen.dart';
-import 'package:desti_go/views/trips_managment/trips_screen.dart';
-import 'package:desti_go/trip_details_screen.dart';
-import 'package:desti_go/views/trips_managment/add_trip_screen.dart';
-import 'package:desti_go/plan_screen.dart';
-import 'package:desti_go/diary_screen.dart';
+import 'package:desti_go/providers/trip_provider.dart';
+import 'package:desti_go/controllers/place_controller.dart';
+import 'package:desti_go/providers/place_provider.dart';
+import 'package:desti_go/repositories/place_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  await dotenv.load(fileName: "assets/.env"); 
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final PlaceRepository placeRepository = PlaceRepository();
+    final GooglePlace googlePlace = GooglePlace(dotenv.env['GOOGLE_PLACES_API_KEY']!);
+    final PlaceController placeController = PlaceController(placeRepository: placeRepository, googlePlace: googlePlace);
+    final TripRepository tripRepository = TripRepository();
+    final TripController tripController = TripController(tripRepository: tripRepository);
+
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => TripController()), // Provide TripController
+        ChangeNotifierProvider(create: (_) => TripProvider(tripController: tripController)),
+        ChangeNotifierProvider(create: (_) => PlaceProvider(placeController: placeController)),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -40,20 +46,12 @@ class MyApp extends StatelessWidget {
               primarySwatch: Colors.blue,
             ),
             debugShowCheckedModeBanner: false,
-            initialRoute: '/',
-            routes: {
-              '/': (context) => LogoScreen(),
-              '/login': (context) => LoginScreen(authController: authController),
-              '/register': (context) => RegisterScreen(authController: authController),
-              '/trips': (context) => TripsScreen(),
-              //'/trip-details': (context) => TripDetailsScreen(trip: ,),
-              '/add-trip': (context) => AddTripScreen(),
-              '/plan': (context) => PlanScreen(),
-              '/diary': (context) => DiaryScreen(),
-            },
+            initialRoute: Routes.initialRoute,
+            routes: Routes.routes(context, authController), // Using Routes class for defining routes
           );
         },
       ),
     );
   }
 }
+

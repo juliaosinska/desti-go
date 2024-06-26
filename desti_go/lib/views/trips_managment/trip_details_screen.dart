@@ -1,7 +1,10 @@
+import 'package:desti_go/providers/authorization_provider.dart';
+import 'package:desti_go/providers/trip_provider.dart';
+import 'package:desti_go/views/diary/diary_screen.dart';
+import 'package:desti_go/views/plan/plan_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:desti_go/models/trip.dart';
-import 'package:desti_go/controllers/trip_controller.dart';
 import 'package:provider/provider.dart';
 
 class TripDetailsScreen extends StatelessWidget {
@@ -11,7 +14,8 @@ class TripDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tripController = Provider.of<TripController>(context);
+    final tripProvider = Provider.of<TripProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     // Calculate days until the trip
     final now = DateTime.now();
@@ -40,6 +44,22 @@ class TripDetailsScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
+        actions: <Widget>[
+            Padding(
+              padding: EdgeInsets.only(right: 20.0),
+              child: GestureDetector(
+                onTap: () async {
+                  try {
+                    await authProvider.signOut();
+                    Navigator.pushNamed(context, '/');
+                  } catch (e) {
+                    print('Error signing out: $e');
+                  }
+                },
+                child: Icon(Icons.logout, color: Colors.white),
+              ),
+            ),
+          ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -55,16 +75,16 @@ class TripDetailsScreen extends StatelessWidget {
                     children: <Widget>[
                       Text(
                         trip.destination.toUpperCase(),
-                        style: TextStyle(fontSize: 70, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
                       ),
                       Text(
                         '$formattedDepartureDate - $formattedReturnDate',
-                        style: TextStyle(fontSize: 40),
+                        style: TextStyle(fontSize: 25),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.airplanemode_active, size: 200, color: Colors.black),
+                Icon(Icons.airplanemode_active, size: 100, color: Colors.black),
               ],
             ),
             Divider(
@@ -77,20 +97,20 @@ class TripDetailsScreen extends StatelessWidget {
               children: [
                 Text(
                   'Your trip is in ',
-                  style: TextStyle(fontSize: 40),
+                  style: TextStyle(fontSize: 30),
                 ),
                 CircleAvatar(
-                  radius: 50,
+                  radius: 35,
                   child: Text(
                     '$daysUntilTrip',
-                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                   ),
                   backgroundColor: Color.fromARGB(255, 97, 64, 187),
                   foregroundColor: Colors.white,
                 ),
                 Text(
                   ' days!',
-                  style: TextStyle(fontSize: 40),
+                  style: TextStyle(fontSize: 30),
                 ),
               ],
             ),
@@ -111,19 +131,24 @@ class TripDetailsScreen extends StatelessWidget {
               children: <Widget>[
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/plan');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PlanScreen(trip: trip),
+                      ),
+                    );
                   },
                   icon: Icon(Icons.calendar_today, color: Colors.white),
                   label: Text(
                     'PLAN',
                     style: TextStyle(
-                      color: Colors.white, 
-                      fontSize: 18, 
-                      fontWeight: FontWeight.bold
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 30),
                     backgroundColor: Color.fromARGB(255, 97, 64, 187),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
@@ -134,7 +159,12 @@ class TripDetailsScreen extends StatelessWidget {
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/diary');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DiaryScreen(trip: trip),
+                      ),
+                    );
                   },
                   icon: Icon(Icons.star, color: Color.fromARGB(255, 97, 64, 187)),
                   label: Text(
@@ -146,7 +176,7 @@ class TripDetailsScreen extends StatelessWidget {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 30),
                     backgroundColor: Color.fromARGB(255, 196, 188, 238),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
@@ -173,7 +203,7 @@ class TripDetailsScreen extends StatelessWidget {
                             child: Text('Yes'),
                             onPressed: () async {
                               try {
-                                await tripController.deleteTrip(trip.id!, trip.userId);
+                                await tripProvider.deleteTrip(trip.id!, trip.userId);
                                 Navigator.of(context).pop();
                                 Navigator.of(context).pop(); // Pop twice to go back to previous screen
                               } catch (e) {

@@ -4,6 +4,7 @@ class Trip {
   final String destination;
   final DateTime departureDate;
   final DateTime returnDate;
+  final bool isDeleted;
 
   Trip({
     this.id,
@@ -11,5 +12,6 @@ class Trip {
     required this.destination,
     required this.departureDate,
     required this.returnDate,
+    required this.isDeleted,
   });
 }
