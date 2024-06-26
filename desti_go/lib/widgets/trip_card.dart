@@ -1,4 +1,4 @@
-import 'package:desti_go/trip_details_screen.dart';
+import 'package:desti_go/views/trips_managment/trip_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:desti_go/models/trip.dart';
