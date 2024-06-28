@@ -2,19 +2,29 @@ import 'package:desti_go/models/user.dart';
 import 'package:desti_go/providers/authorization_provider.dart';
 
 class AuthController {
-  final AuthProvider authProvider;
+  final AuthNotifier authNotifier;
 
-  AuthController({required this.authProvider});
+  AuthController(this.authNotifier);
 
   Future<UserModel?> signIn(String email, String password) async {
-    return await authProvider.signIn(email, password);
+    try {
+      await authNotifier.signIn(email, password);
+      return authNotifier.state;
+    } catch (e) {
+      throw e;
+    }
   }
 
   Future<UserModel?> register(String email, String password) async {
-    return await authProvider.register(email, password);
+    try {
+      await authNotifier.register(email, password);
+      return authNotifier.state;
+    } catch (e) {
+      throw e;
+    }
   }
 
   Future<void> signOut() async {
-    await authProvider.signOut();
+    await authNotifier.signOut();
   }
 }

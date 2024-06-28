@@ -1,28 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:desti_go/views/day_plan/day_plan_screen.dart';
+import 'package:desti_go/views/plan_managment/day_plan_screen.dart';
 
 class DayCard extends StatelessWidget {
   final DateTime day;
   final String formattedDate;
   final int index;
-  final String tripId; // Add tripId here
+  final String tripId;
 
   DayCard({
     required this.day,
     required this.formattedDate,
     required this.index,
-    required this.tripId, // Initialize tripId in constructor
+    required this.tripId,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      elevation: 5.0,
       child: ListTile(
-        leading: Icon(Icons.calendar_today_rounded, color: Colors.black),
-        title: Text('DAY ${index + 1}'), // Use index to display sequential order
+        leading: const Icon(Icons.calendar_today_rounded, color: Colors.black),
+        title: Text('DAY ${index + 1}'),
         subtitle: Text(formattedDate),
-        trailing: Icon(Icons.arrow_forward),
+        trailing: const Icon(Icons.arrow_forward),
         onTap: () {
           Navigator.push(
             context,
@@ -30,16 +34,12 @@ class DayCard extends StatelessWidget {
               builder: (context) => DayPlanScreen(
                 day: day,
                 formattedDate: formattedDate,
-                tripId: tripId, // Pass tripId to DayPlanScreen
+                tripId: tripId,
               ),
             ),
           );
         },
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-      elevation: 5.0,
     );
   }
 }

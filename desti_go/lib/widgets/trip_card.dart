@@ -5,8 +5,9 @@ import 'package:desti_go/models/trip.dart';
 
 class TripCard extends StatelessWidget {
   final Trip trip;
+  final String tripId;
 
-  TripCard({required this.trip});
+  TripCard({required this.trip, required this.tripId});
 
   @override
   Widget build(BuildContext context) {
@@ -20,22 +21,22 @@ class TripCard extends StatelessWidget {
       ),
       elevation: 5.0,
       child: ListTile(
-        contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
-        leading: Icon(Icons.location_city, color: Colors.black),
+        contentPadding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 16.0),
+        leading: const Icon(Icons.location_city, color: Colors.black),
         title: Text(
           trip.destination,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
         ),
         subtitle: Text(
           '$formattedDepartureDate - $formattedReturnDate',
           style: TextStyle(fontSize: 16.0, color: Colors.grey[600]),
         ),
-        trailing: Icon(Icons.arrow_forward),
+        trailing: const Icon(Icons.arrow_forward),
         onTap: () {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TripDetailsScreen(trip: trip),
+              builder: (context) => TripDetailsScreen(trip: trip, tripId: tripId,),
             ),
           );
         },
