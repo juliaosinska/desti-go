@@ -1,33 +1,30 @@
-import 'package:flutter/material.dart';
+import 'package:desti_go/models/place_state.dart';
+import 'package:desti_go/repositories/place_repository.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:desti_go/controllers/place_controller.dart';
 import 'package:desti_go/models/place.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_place/google_place.dart';
 
-class PlaceProvider with ChangeNotifier {
+class PlaceNotifier extends StateNotifier<PlaceState> {
   final PlaceController placeController;
-  Map<DateTime, List<Place>> _places = {};
-  List<AutocompletePrediction> _autocompletePredictions = [];
-  List<SearchResult> _nearbyPlaces = [];
-  List<SearchResult> _textSearchResults = [];
-  bool isLoading = false;
-  String error = '';
-  Position? _currentPosition;
+  final GooglePlace googlePlace;
 
-  PlaceProvider({required this.placeController});
-
-  Position? get currentPosition => _currentPosition;
-
-  Map<DateTime, List<Place>> get places => _places;
-  List<AutocompletePrediction> get autocompletePredictions => _autocompletePredictions;
-  List<SearchResult> get nearbyPlaces => _nearbyPlaces;
-  List<SearchResult> get textSearchResults => _textSearchResults;
+  PlaceNotifier(this.placeController, this.googlePlace)
+      : super(PlaceState(
+          places: {},
+          autocompletePredictions: [],
+          nearbyPlaces: [],
+          textSearchResults: [],
+          isLoading: false,
+          error: '',
+        ));
 
   Future<void> addPlace(String tripId, DateTime day, Place place) async {
     try {
-      String placeId = await placeController.addPlace(tripId, day, place);
+      final placeId = await placeController.addPlace(tripId, day, place);
 
-      Place newPlace = Place(
+      final newPlace = Place(
         id: placeId,
         name: place.name,
         address: place.address,
@@ -36,108 +33,129 @@ class PlaceProvider with ChangeNotifier {
         photos: place.photos,
       );
 
-      if (_places.containsKey(day)) {
-        _places[day]!.add(newPlace);
+      final updatedPlaces = {...state.places};
+      if (updatedPlaces.containsKey(day)) {
+        updatedPlaces[day]!.add(newPlace);
       } else {
-        _places[day] = [newPlace];
+        updatedPlaces[day] = [newPlace];
       }
 
-      notifyListeners();
+      state = state.copyWith(places: updatedPlaces, error: '');
     } catch (error) {
-      print('Error adding place: $error');
-      rethrow;
+      state = state.copyWith(error: 'Error adding place: $error');
     }
   }
 
   Future<void> fetchPlaces(String tripId, DateTime day) async {
     try {
-      _places[day] = await placeController.getPlaces(tripId, day);
-      notifyListeners();
+      final fetchedPlaces = await placeController.getPlaces(tripId, day);
+      final updatedPlaces = {...state.places};
+      updatedPlaces[day] = fetchedPlaces;
+
+      state = state.copyWith(places: updatedPlaces, error: '');
     } catch (error) {
-      print('Error fetching places: $error');
-      rethrow;
+      state = state.copyWith(error: 'Error fetching places: $error');
     }
   }
 
   Future<void> deletePlace(String tripId, DateTime day, String placeId) async {
     try {
       await placeController.deletePlace(tripId, day, placeId);
-      if (_places.containsKey(day)) {
-        _places[day]!.removeWhere((place) => place.id == placeId);
-        notifyListeners();
-      }
+
+      final updatedPlaces = {...state.places};
+      updatedPlaces[day] = updatedPlaces[day]!.where((place) => place.id != placeId).toList();
+
+      state = state.copyWith(places: updatedPlaces, error: '');
     } catch (error) {
-      print('Error deleting place: $error');
-      rethrow;
+      state = state.copyWith(error: 'Error deleting place: $error');
     }
   }
 
   Future<void> autocompletePlaces(String input) async {
-    isLoading = true;
-    notifyListeners();
     try {
-      _autocompletePredictions = await placeController.autocompletePlaces(input);
-      error = '';
-    } catch (e) {
-      error = e.toString();
+      final predictions = await placeController.autocompletePlaces(input);
+      state = state.copyWith(autocompletePredictions: predictions, error: '');
+    } catch (error) {
+      state = state.copyWith(error: 'Error autocompleting places: $error');
     }
-    isLoading = false;
-    notifyListeners();
   }
 
-  Future<List<SearchResult>> getNearbyPlaces(Location location, int radius) async {
-    isLoading = true;
-    notifyListeners();
+  Future<void> nearbySearch(Location location, int radius, {String? type, String? keyword}) async {
     try {
-      _nearbyPlaces = await placeController.nearbySearch(location, radius);
-      error = '';
-    } catch (e) {
-      error = e.toString();
-      _nearbyPlaces = [];
+      final nearbyResults = await placeController.nearbySearch(location, radius, type: type, keyword: keyword);
+      state = state.copyWith(nearbyPlaces: nearbyResults, error: '');
+    } catch (error) {
+      state = state.copyWith(error: 'Error fetching nearby places: $error');
     }
-    isLoading = false;
-    notifyListeners();
-    return _nearbyPlaces;
   }
 
-  Future<void> searchTextPlaces(String query) async {
-    isLoading = true;
-    notifyListeners();
+  Future<void> textSearch(String query) async {
     try {
-      _textSearchResults = await placeController.textSearch(query);
-      error = '';
-    } catch (e) {
-      error = e.toString();
+      final searchResults = await placeController.textSearch(query);
+      state = state.copyWith(textSearchResults: searchResults, error: '');
+    } catch (error) {
+      state = state.copyWith(error: 'Error fetching text search results: $error');
     }
-    isLoading = false;
-    notifyListeners();
   }
 
   Future<DetailsResult> getPlaceDetails(String placeId) async {
     try {
-      return await placeController.getPlaceDetails(placeId);
+      final response = await googlePlace.details.get(placeId);
+      return response!.result!;
     } catch (error) {
       print('Error getting place details: $error');
-      throw error;
+      throw Exception('Failed to get place details: $error');
     }
   }
 
   Future<List<Photo>> getPlacePhotos(String placeId) async {
     try {
-      return await placeController.getPlacePhotos(placeId);
+      final response = await googlePlace.details.get(placeId);
+      return response?.result?.photos ?? [];
     } catch (error) {
       print('Error getting place photos: $error');
-      throw error;
+      throw Exception('Failed to get place photos: $error');
     }
   }
 
-  Future<void> initCurrentLocation() async {
+  Future<void> getCurrentPosition() async {
     try {
-      _currentPosition = await placeController.getCurrentPosition();
-      notifyListeners();
+      final position = await placeController.getCurrentPosition();
+      state = state.copyWith(currentPosition: position, error: '');
     } catch (error) {
-      print('Error getting current position: $error');
-      throw error;
+      state = state.copyWith(error: 'Error getting current position: $error');
     }
   }
+
+  void clearAutocompleteResults() {
+    state = state.copyWith(autocompletePredictions: []);
+  }
+
+  void clearNearbyResults() {
+    state = state.copyWith(nearbyPlaces: []);
+  }
+
+  void clearResults() {
+    clearAutocompleteResults();
+    clearNearbyResults();
+  }
 }
+final placeRepositoryProvider = Provider<PlaceRepository>((ref) {
+  return PlaceRepository();
+});
+
+final placeControllerProvider = Provider((ref) {
+  final placeRepository = ref.watch(placeRepositoryProvider);
+  final googlePlace = GooglePlace(dotenv.env['GOOGLE_PLACES_API_KEY']!);
+  return PlaceController(placeRepository: placeRepository, googlePlace: googlePlace);
+});
+
+final placeProvider = StateNotifierProvider<PlaceNotifier, PlaceState>((ref) {
+  final googlePlace = GooglePlace(dotenv.env['GOOGLE_PLACES_API_KEY']!);
+  final placeController = PlaceController(placeRepository: PlaceRepository(), googlePlace: googlePlace);
+  return PlaceNotifier(placeController, googlePlace);
+});
+
+
+
+

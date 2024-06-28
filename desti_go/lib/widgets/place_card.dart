@@ -1,12 +1,10 @@
-// widgets/place_card.dart
-
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:desti_go/models/place.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
 import 'package:desti_go/providers/place_provider.dart';
 
-class PlaceCard extends StatelessWidget {
+class PlaceCard extends ConsumerWidget {
   final Place place;
   final String tripId;
   final DateTime day;
@@ -14,29 +12,29 @@ class PlaceCard extends StatelessWidget {
   PlaceCard({required this.place, required this.day, required this.tripId});
 
   @override
-  Widget build(BuildContext context) {
-    final placeProvider = Provider.of<PlaceProvider>(context, listen: false);
+  Widget build(BuildContext context, WidgetRef ref) {
     String googlePlacesApiKey = dotenv.env['GOOGLE_PLACES_API_KEY'] ?? '';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      elevation: 5.0,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: Icon(Icons.place, color: Colors.black),
-            title: Text(place.name, style: TextStyle(fontWeight: FontWeight.bold)),
+            leading: const Icon(Icons.place, color: Colors.black),
+            title: Text(place.name, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(place.address),
             trailing: IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: () {
-                placeProvider.deletePlace(tripId, day, place.id);
+                ref.read(placeProvider.notifier).deletePlace(tripId, day, place.id);
               },
               color: Colors.red,
             ),
-            onTap: () {
-              // Add navigation to place details if needed
-            },
           ),
           if (place.photos != null && place.photos!.isNotEmpty)
             SizedBox(
@@ -62,10 +60,6 @@ class PlaceCard extends StatelessWidget {
             ),
         ],
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10.0),
-      ),
-      elevation: 5.0,
     );
   }
 }

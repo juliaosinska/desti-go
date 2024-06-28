@@ -1,55 +1,40 @@
-import 'package:desti_go/providers/trip_provider.dart';
+import 'package:desti_go/widgets/my_app_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:desti_go/providers/authorization_provider.dart';
+import 'package:desti_go/providers/trip_provider.dart';
 
-class AddTripScreen extends StatefulWidget {
-  @override
-  _AddTripScreenState createState() => _AddTripScreenState();
-}
+//state providers for dates so that we can update controllers with picked dates
+final departureDateProvider = StateProvider<DateTime?>((ref) => null);
+final returnDateProvider = StateProvider<DateTime?>((ref) => null);
 
-class _AddTripScreenState extends State<AddTripScreen> {
+class AddTripScreen extends ConsumerWidget {
   final TextEditingController _destinationController = TextEditingController();
-  DateTime? _departureDate;
-  DateTime? _returnDate;
 
   @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final userId = authProvider.user!.uid;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tripNotifier = ref.watch(tripProvider.notifier);
+    
+    final authState = ref.watch(authProvider);
+    final userId = authState?.uid;
+
+    final departureDate = ref.watch(departureDateProvider);
+    final returnDate = ref.watch(returnDateProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Add a new trip',
-          style: TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Color.fromARGB(255, 97, 64, 187),
-        elevation: 10.0,
-        shadowColor: Colors.black.withOpacity(1),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(right: 20.0),
-            child: GestureDetector(
-              onTap: () async {
-                try {
-                  await authProvider.signOut();
-                  Navigator.pushNamed(context, '/');
-                } catch (e) {
-                  print('Error signing out: $e');
-                }
-              },
-              child: Icon(Icons.logout, color: Colors.white),
-            ),
-          ),
-        ],
+      appBar: MyAppBar(
+        title: 'Add a trip',
+        onLogout: () async {
+          try {
+            await ref.read(authProvider.notifier).signOut();
+            Navigator.pushNamed(context, '/');
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error signing out.')),
+            );
+          }
+        },
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -59,14 +44,14 @@ class _AddTripScreenState extends State<AddTripScreen> {
             children: <Widget>[
               TextField(
                 controller: _destinationController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Destination',
                   hintText: 'Please, enter your city of choice.',
                   border: OutlineInputBorder(),
                   suffixIcon: Icon(Icons.input_rounded),
                 ),
               ),
-              SizedBox(height: 30.0),
+              const SizedBox(height: 30.0),
               Card(
                 elevation: 5.0,
                 shape: RoundedRectangleBorder(
@@ -77,10 +62,10 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('Select date', style: TextStyle(fontSize: 16)),
-                      SizedBox(height: 10.0),
-                      Text('Enter date of departure', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10.0),
+                      const Text('Select date', style: TextStyle(fontSize: 16)),
+                      const SizedBox(height: 10.0),
+                      const Text('Enter date of departure', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10.0),
                       InkWell(
                         onTap: () async {
                           DateTime? pickedDate = await showDatePicker(
@@ -89,21 +74,19 @@ class _AddTripScreenState extends State<AddTripScreen> {
                             firstDate: DateTime.now(),
                             lastDate: DateTime(DateTime.now().year + 10),
                           );
-                          if (pickedDate != null && pickedDate != _departureDate) {
-                            setState(() {
-                              _departureDate = pickedDate;
-                            });
+                          if (pickedDate != null) {
+                            ref.read(departureDateProvider.notifier).state = pickedDate;
                           }
                         },
                         child: InputDecorator(
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Date',
                           ),
                           child: Text(
-                            _departureDate == null
+                            departureDate == null
                                 ? 'mm/dd/yyyy'
-                                : DateFormat.yMd().format(_departureDate!),
+                                : DateFormat.yMd().format(departureDate),
                           ),
                         ),
                       ),
@@ -111,7 +94,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 30.0),
+              const SizedBox(height: 30.0),
               Card(
                 elevation: 5.0,
                 shape: RoundedRectangleBorder(
@@ -122,8 +105,8 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text('Enter return date', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                      SizedBox(height: 10.0),
+                      const Text('Enter return date', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10.0),
                       InkWell(
                         onTap: () async {
                           DateTime? pickedDate = await showDatePicker(
@@ -132,21 +115,19 @@ class _AddTripScreenState extends State<AddTripScreen> {
                             firstDate: DateTime.now(),
                             lastDate: DateTime(DateTime.now().year + 10),
                           );
-                          if (pickedDate != null && pickedDate != _returnDate) {
-                            setState(() {
-                              _returnDate = pickedDate;
-                            });
+                          if (pickedDate != null) {
+                            ref.read(returnDateProvider.notifier).state = pickedDate;
                           }
                         },
                         child: InputDecorator(
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: 'Date',
                           ),
                           child: Text(
-                            _returnDate == null
+                            returnDate == null
                                 ? 'mm/dd/yyyy'
-                                : DateFormat.yMd().format(_returnDate!),
+                                : DateFormat.yMd().format(returnDate),
                           ),
                         ),
                       ),
@@ -154,37 +135,36 @@ class _AddTripScreenState extends State<AddTripScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 30.0),
+              const SizedBox(height: 30.0),
               SizedBox(
                 width: double.infinity,
                 height: 50,
+                //adding trip
                 child: ElevatedButton(
                   onPressed: () async {
                     final destination = _destinationController.text;
-                    final departureDate = _departureDate;
-                    final returnDate = _returnDate;
 
+                    //error if any field is empty  
                     if (destination.isEmpty || departureDate == null || returnDate == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please fill all the fields')),
+                        const SnackBar(content: Text('Please fill all the fields')),
                       );
                       return;
                     }
 
-                    final tripProvider = Provider.of<TripProvider>(context, listen: false);
-                    await tripProvider.addTrip(userId, destination, departureDate, returnDate);
+                    await tripNotifier.addTrip(userId!, destination, departureDate, returnDate);
                     Navigator.pop(context);
                   },
-                  child: Text('Add trip', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
-                    backgroundColor: Color.fromARGB(255, 97, 64, 187),
+                    backgroundColor: const Color.fromARGB(255, 97, 64, 187),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30.0),
                     ),
                     elevation: 5.0,
                     shadowColor: Colors.black.withOpacity(1),
                   ),
+                  child: const Text('Add trip', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ),
             ],

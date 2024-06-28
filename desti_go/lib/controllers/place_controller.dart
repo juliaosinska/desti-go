@@ -39,15 +39,14 @@ class PlaceController {
   Future<List<AutocompletePrediction>> autocompletePlaces(String input) async {
     try {
       final response = await googlePlace.autocomplete.get(input);
-      return response?.predictions ?? []; // Handle null case
+      return response?.predictions ?? [];
     } catch (error) {
       print('Error autocompleting places: $error');
       throw Exception('Failed to autocomplete places: $error');
     }
   }
 
-  Future<List<SearchResult>> nearbySearch(Location location, int radius,
-      {String? type, String? keyword}) async {
+  Future<List<SearchResult>> nearbySearch(Location location, int radius, {String? type, String? keyword}) async {
     try {
       final response = await googlePlace.search.getNearBySearch(
         Location(lat: location.lat, lng: location.lng),
@@ -55,7 +54,7 @@ class PlaceController {
         type: type,
         keyword: keyword,
       );
-      return response?.results ?? []; // Handle null case
+      return response?.results ?? [];
     } catch (error) {
       print('Error nearby search: $error');
       throw Exception('Failed nearby search: $error');
@@ -65,7 +64,7 @@ class PlaceController {
   Future<List<SearchResult>> textSearch(String query) async {
     try {
       final response = await googlePlace.search.getTextSearch(query);
-      return response?.results ?? []; // Handle null case
+      return response?.results ?? [];
     } catch (error) {
       print('Error text search: $error');
       throw Exception('Failed text search: $error');

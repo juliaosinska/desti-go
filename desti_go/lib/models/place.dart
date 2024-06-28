@@ -1,12 +1,12 @@
 import 'package:desti_go/models/photo.dart';
 
 class Place {
-  final String id; // Firestore document ID
+  final String id;
   final String name;
   final String address;
   final double latitude;
   final double longitude;
-  final List<Photo>? photos; // List of photos for the place
+  final List<Photo>? photos;
 
   Place({
     required this.id,
@@ -14,7 +14,7 @@ class Place {
     required this.address,
     required this.latitude,
     required this.longitude,
-    this.photos, // Optional parameter for photos
+    this.photos,
   });
 
   Place copyWith({

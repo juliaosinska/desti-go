@@ -1,14 +1,13 @@
-import 'package:desti_go/controllers/authorization_controller.dart';
+import 'package:desti_go/providers/authorization_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class RegisterScreen extends StatelessWidget {
-  final AuthController authController;
+class RegisterScreen extends ConsumerWidget {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  RegisterScreen({required this.authController});
-
+  //error message snackbar
   void _showError(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -17,12 +16,14 @@ class RegisterScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authNotifier = ref.watch(authProvider.notifier);
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Register',
           style: TextStyle(
             fontSize: 30,
@@ -30,11 +31,11 @@ class RegisterScreen extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Color.fromARGB(255, 97, 64, 187),
+        backgroundColor: const Color.fromARGB(255, 97, 64, 187),
         elevation: 10.0,
         shadowColor: Colors.black.withOpacity(1),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white,),
+          icon: const Icon(Icons.arrow_back, color: Colors.white,),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -46,14 +47,14 @@ class RegisterScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(
+              const Text(
                 'Nice to meet you!',
                 style: TextStyle(fontSize: 45.0, fontWeight: FontWeight.bold),
               ),
-                            SizedBox(height: 40.0),
+              const SizedBox(height: 40.0),
               TextField(
                 controller: _emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'E-mail',
                   hintText: 'Please, enter your e-mail.',
                   border: OutlineInputBorder(),
@@ -62,11 +63,11 @@ class RegisterScreen extends StatelessWidget {
                   fillColor: Color.fromARGB(255, 235, 227, 242),
                 ),
               ),
-              SizedBox(height: 20.0),
+              const SizedBox(height: 20.0),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Password',
                   hintText: 'Please enter your password.',
                   border: OutlineInputBorder(),
@@ -75,47 +76,52 @@ class RegisterScreen extends StatelessWidget {
                   fillColor: Color.fromARGB(255, 235, 227, 242),
                 ),
               ),
-              SizedBox(height: 40.0),
+              const SizedBox(height: 40.0),
+              //registering user with credentials given in text controllers
               ElevatedButton(
                 onPressed: () async {
                   String email = _emailController.text.trim();
                   String password = _passwordController.text.trim();
                   try {
-                    await authController.register(email, password);
+                    await authNotifier.register(email, password);
                     Navigator.pushNamed(context, '/trips');
-                  } on FirebaseAuthException catch (e) {
-                    switch (e.code) {
-                      case 'email-already-in-use':
-                        _showError(context, 'The email address is already in use by another account.');
-                        break;
-                      case 'invalid-email':
-                        _showError(context, 'The email address is badly formatted.');
-                        break;
-                      case 'weak-password':
-                        _showError(context, 'The password is too weak.');
-                        break;
-                      default:
-                        _showError(context, 'An unknown error occurred.');
-                    }
                   } catch (e) {
-                    _showError(context, 'An unknown error occurred.');
+                    //handling firebas errors
+                    String errorMessage = 'An error occurred. Please try again later.';
+                    if (e is FirebaseAuthException) {
+                      switch (e.code) {
+                        case 'email-already-in-use':
+                          errorMessage = 'The email address is already in use by another account.';
+                          break;
+                        case 'invalid-email':
+                          errorMessage = 'The email address is badly formatted.';
+                          break;
+                        case 'weak-password':
+                          errorMessage = 'The password is too weak.';
+                          break;
+                        default:
+                          errorMessage = 'Registration failed. ${e.message}';
+                          break;
+                      }
+                    }
+                    _showError(context, errorMessage);
                   }
                 },
-                child: Text(
-                  'REGISTER',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold),
-                ),
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
-                  backgroundColor: Color.fromARGB(255, 97, 64, 187),
+                  padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 20),
+                  backgroundColor: const Color.fromARGB(255, 97, 64, 187),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30.0),
                   ),
                   elevation: 10.0,
                   shadowColor: Colors.black.withOpacity(1),
+                ),
+                child: const Text(
+                  'REGISTER',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold),
                 ),
               ),
             ],

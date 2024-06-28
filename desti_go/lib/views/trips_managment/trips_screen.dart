@@ -1,23 +1,26 @@
 import 'package:desti_go/providers/trip_provider.dart';
+import 'package:desti_go/widgets/my_app_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:desti_go/providers/authorization_provider.dart';
 import 'package:desti_go/widgets/trip_card.dart';
 
-class TripsScreen extends StatelessWidget {
+class TripsScreen extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final user = authProvider.user;
-    final tripProvider = Provider.of<TripProvider>(context);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider); 
+    final tripState = ref.watch(tripProvider);
+    final tripNotifier = ref.watch(tripProvider.notifier);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      tripProvider.fetchTrips(authProvider.user!.uid);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (authState != null) {
+        await tripNotifier.fetchTrips(authState.uid);
+      }
     });
 
-
-    if (user == null) {
-      return Scaffold(
+    //checking if user logged in (should be)
+    if (authState == null) {
+      return const Scaffold(
         body: Center(
           child: Text('User not logged in!'),
         ),
@@ -25,47 +28,25 @@ class TripsScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Your trips',
-          style: TextStyle(
-            fontSize: 30,
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Color.fromARGB(255, 97, 64, 187),
-        elevation: 10.0,
-        shadowColor: Colors.black.withOpacity(1),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: EdgeInsets.only(right: 20.0),
-            child: GestureDetector(
-              onTap: () async {
-                try {
-                  await authProvider.signOut();
-                  Navigator.pushNamed(context, '/');
-                } catch (e) {
-                  print('Error signing out: $e');
-                }
-              },
-              child: Icon(Icons.logout, color: Colors.white),
-            ),
-          ),
-        ],
+      appBar: MyAppBar(
+        title: 'Your trips',
+        onLogout: () async {
+          try {
+            await ref.read(authProvider.notifier).signOut();
+            Navigator.pushNamed(context, '/');
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error signing out.')),
+            );
+          }
+        },
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Icon(Icons.list_alt_rounded, size: 100, color: Colors.black),
                 SizedBox(width: 16.0),
@@ -77,26 +58,20 @@ class TripsScreen extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Expanded(
-              child: Consumer<TripProvider>(
-                builder: (context, tripProvider, _) {
-                  if (!tripProvider.isLoading && tripProvider.trips.isEmpty) {
-                    // Only show CircularProgressIndicator when not loading and trips are empty
-                    return Center(child: CircularProgressIndicator());
-                  } else if (tripProvider.error.isNotEmpty) {
-                    // Handle error case
-                    return Center(child: Text('Error: ${tripProvider.error}'));
-                  } else {
-                    return ListView.builder(
-                      itemCount: tripProvider.trips.length,
-                      itemBuilder: (context, index) {
-                        return TripCard(trip: tripProvider.trips[index]);
-                      },
-                    );
-                  }
-                },
-              ),
+              child: tripState.trips.isEmpty
+                  ? const Center(child: Text('No trips added yet!'))
+                  : tripState.error.isNotEmpty
+                      ? Center(child: Text('Error: ${tripState.error}'))
+                      : ListView.builder(
+                          itemCount: tripState.trips.length,
+                          itemBuilder: (context, index) {
+                            final trip = tripState.trips[index];
+                            return TripCard(trip: trip, tripId: trip.id!,
+                            );
+                          },
+                        ),
             ),
           ],
         ),
@@ -105,8 +80,8 @@ class TripsScreen extends StatelessWidget {
         onPressed: () {
           Navigator.pushNamed(context, '/add-trip');
         },
-        child: Icon(Icons.add, color: Colors.white),
-        backgroundColor: Color.fromARGB(255, 97, 64, 187),
+        backgroundColor: const Color.fromARGB(255, 97, 64, 187),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
