@@ -13,9 +13,8 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await dotenv.load(fileName: "assets/.env");
 
-  // Create instances of repositories or services needed by AuthController
   final authRepository = AuthRepository();
-  final authNotifier = AuthNotifier(authRepository); // Replace with your actual AuthNotifier
+  final authNotifier = AuthNotifier(authRepository);
   final authController = AuthController(authNotifier);
 
   runApp(ProviderScope(
@@ -37,7 +36,7 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       initialRoute: Routes.initialRoute,
-      routes: Routes.routes(context, authController), // Pass authController to routes
+      routes: Routes.routes(context, authController),
     );
   }
 }

@@ -59,26 +59,29 @@ class DayPlanScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16.0),
-            if (placeState.isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (placeState.error.isNotEmpty)
-              Center(child: Text('Error: ${placeState.error}'))
-            else if (placeState.places[day] == null || placeState.places[day]!.isEmpty)
-              const Center(child: Text('No places added for this day yet.'))
-            else
-              Expanded(
-                child: ListView.builder(
-                  padding: EdgeInsets.zero,
-                  itemCount: placeState.places[day]!.length,
-                  itemBuilder: (context, index) {
-                    return PlaceCard(
-                      place: placeState.places[day]![index],
-                      day: day,
-                      tripId: tripId,
-                    );
-                  },
-                ),
+            Expanded(
+              child: Center(
+                child: placeState.isLoading
+                    ? CircularProgressIndicator()
+                    : placeState.error.isNotEmpty
+                        ? Text('Error: ${placeState.error}')
+                        : placeState.places[day] == null
+                            ? CircularProgressIndicator()
+                            : placeState.places[day]!.isEmpty
+                                ? Text('No places added for this day yet.')
+                                : ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    itemCount: placeState.places[day]!.length,
+                                    itemBuilder: (context, index) {
+                                      return PlaceCard(
+                                        place: placeState.places[day]![index],
+                                        day: day,
+                                        tripId: tripId,
+                                      );
+                                    },
+                                  ),
               ),
+            ),
           ],
         ),
       ),

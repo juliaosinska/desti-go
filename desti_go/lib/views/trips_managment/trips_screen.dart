@@ -18,7 +18,6 @@ class TripsScreen extends ConsumerWidget {
       }
     });
 
-    //checking if user logged in (should be)
     if (authState == null) {
       return const Scaffold(
         body: Center(
@@ -60,18 +59,20 @@ class TripsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16.0),
             Expanded(
-              child: tripState.trips.isEmpty
-                  ? const Center(child: Text('No trips added yet!'))
-                  : tripState.error.isNotEmpty
-                      ? Center(child: Text('Error: ${tripState.error}'))
-                      : ListView.builder(
-                          itemCount: tripState.trips.length,
-                          itemBuilder: (context, index) {
-                            final trip = tripState.trips[index];
-                            return TripCard(trip: trip, tripId: trip.id!,
-                            );
-                          },
-                        ),
+              child: tripState.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : tripState.trips.isEmpty
+                      ? const Center(child: Text('No trips added yet!'))
+                      : tripState.error.isNotEmpty
+                          ? Center(child: Text('Error: ${tripState.error}'))
+                          : ListView.builder(
+                              itemCount: tripState.trips.length,
+                              itemBuilder: (context, index) {
+                                final trip = tripState.trips[index];
+                                return TripCard(trip: trip, tripId: trip.id!,
+                                );
+                              },
+                            ),
             ),
           ],
         ),
