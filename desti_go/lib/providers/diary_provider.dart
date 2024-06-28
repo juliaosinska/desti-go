@@ -60,6 +60,10 @@ class DiaryProvider extends StateNotifier<List<DiaryEntry>> {
       throw e;
     }
   }
+
+  void clearDiaryEntries() async {
+    state = [];
+  }
 }
 
 final diaryRepositoryProvider = Provider<DiaryRepository>((ref) {

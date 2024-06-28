@@ -70,7 +70,7 @@ class _ExploreScreenState extends ConsumerState<ExploreScreen> {
             lat: placeState.currentPosition!.latitude,
             lng: placeState.currentPosition!.longitude,
           ),
-          1000, // Define a suitable radius
+          1000,
         );
       }
     } catch (error) {

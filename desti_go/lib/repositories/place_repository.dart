@@ -11,7 +11,7 @@ class PlaceRepository {
       final DocumentReference tripRef = firestore.collection('trips').doc(tripId);
       final CollectionReference dayPlacesRef = tripRef.collection('days').doc(dayId).collection('places');
       final docRef = await dayPlacesRef.add(place.toMap());
-      return docRef.id; // Return the document ID
+      return docRef.id;
     } catch (error) {
       print('Error adding place to day: $error');
       rethrow;

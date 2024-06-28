@@ -112,6 +112,10 @@ class _AddDiaryEntryScreenState extends ConsumerState<AddDiaryEntryScreen> {
                       timestamp: widget.date,
                       imageFile: _imageFile,
                     );
+
+                    diaryNotifier.clearDiaryEntries();
+                    await diaryNotifier.fetchDiaryEntries(widget.tripId, widget.date);
+                    
                     Navigator.pop(context);
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(

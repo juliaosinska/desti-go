@@ -10,13 +10,13 @@ class TripNotifier extends StateNotifier<TripState> {
   TripNotifier(this.tripController)
       : super(TripState(
           trips: [],
-          isLoading: false,
+          isLoading: true,
           error: '',
         ));
 
   Future<void> fetchTrips(String userId) async {
     try {
-      state = TripState(trips: state.trips, isLoading: true, error: '');
+      //state = TripState(trips: state.trips, isLoading: true, error: '');
       final fetchedTrips = await tripController.getTrips(userId);
       state = TripState(trips: fetchedTrips, isLoading: false, error: '');
     } catch (e) {

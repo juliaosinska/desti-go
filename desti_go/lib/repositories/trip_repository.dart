@@ -14,7 +14,7 @@ class TripRepository {
         'returnDate': trip.returnDate,
         'isDeleted': trip.isDeleted,
       });
-      return tripRef.id; // Return the document ID
+      return tripRef.id;
     } catch (e) {
       print('Error adding trip: $e');
       throw e;

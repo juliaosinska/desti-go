@@ -36,19 +36,19 @@ class Routes {
       trips: (context) => TripsScreen(),
       tripDetails: (context) {
         final arguments = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        final trip = arguments['trip'] as Trip; // Adjust the type according to your needs
+        final trip = arguments['trip'] as Trip; 
         final tripId = arguments['tripId'] as String;
         return TripDetailsScreen(trip: trip, tripId: tripId);
       },
       addTrip: (context) => AddTripScreen(),
       plan: (context) {
         final arguments = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        final trip = arguments['trip'] as Trip; // Adjust the type according to your needs
+        final trip = arguments['trip'] as Trip;
         return PlanScreen(trip: trip);
       },
       diary: (context) {
         final arguments = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        final trip = arguments['trip'] as Trip; // Adjust the type according to your needs
+        final trip = arguments['trip'] as Trip;
         final tripId = arguments['tripId'] as String;
         return DiaryScreen(trip: trip, tripId: tripId);
       },
